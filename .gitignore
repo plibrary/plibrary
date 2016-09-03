@@ -1,6 +1,8 @@
 .DS_Store
 
 user_guide
+static/node_modules
+static/bower_components
 
 application/cache/*
 !application/cache/index.html
