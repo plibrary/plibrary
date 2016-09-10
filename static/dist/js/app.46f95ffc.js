@@ -1,0 +1,1 @@
+$(function(){function t(t){alert(t)}t($(".title").text())});

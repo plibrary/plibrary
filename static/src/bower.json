@@ -6,7 +6,8 @@
   "private": true,
   "dependencies": {
     "jquery": "^3.1.0",
-    "jquery-validation": "^1.15.1"
+    "jquery-validation": "^1.15.1",
+    "bootstrap": "^3.3.7"
   },
   "authors": [
     "Rady Rin <rinrady@gmail.com>"
