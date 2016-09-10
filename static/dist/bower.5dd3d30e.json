@@ -1,0 +1,22 @@
+{
+  "name": "plibrary",
+  "description": "plibrary bower dependencies",
+  "version": "0.0.0",
+  "homepage": "",
+  "private": true,
+  "dependencies": {
+    "angular": "^1.5.8",
+    "angular-material": "^1.1.1"
+  },
+  "authors": [
+    "Rady Rin <rinrady@gmail.com>"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {}
+}

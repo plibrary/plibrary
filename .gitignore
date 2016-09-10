@@ -2,7 +2,7 @@
 
 user_guide
 static/node_modules
-static/bower_components
+static/src/bower_components
 
 application/cache/*
 !application/cache/index.html
