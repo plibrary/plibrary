@@ -1,6 +1,24 @@
 <?php 
-	$sql = "SELECT * from book";
+	define("FILED_QUANTITY", "quantity");
+	
+	$page_size = 2;
+	$bookCount= $conn->query('select count(book_id) as total from book ');
+	$data = $bookCount->fetch_assoc();
+	$total_rows = $data['total'];
+	$offset = empty($_GET['offset']) ? 0 : $_GET['offset'];
+	
+	$isAscending = empty($_GET['isAscending']) ? true : !$_GET['isAscending'];
+	$orderByField = empty($_GET['orderBy']) ? 'book_title' : $_GET['orderBy'];
+	$select = "SELECT * from book";
+	$orderBy = " order by ".  $orderByField . ' ' . ($isAscending ? 'asc' : 'desc');
+	$limit = " limit ". $offset .", ".$page_size;
+	$sql = $select . $orderBy . $limit;
+	
+	//echo($sql);
+	
 	$result = $conn->query($sql);
+	
+	
 ?>
 <h1 class="text-center">Book List</h1>
 
@@ -10,8 +28,30 @@
   			<input type="checkbox" id="checkAll">
   		</th>
   		<th>No</th>
-  		<th>Title</th>
-  		<th>quantity</th>
+  		<th>
+  			<a href="?<?=$_SERVER['QUERY_STRING']?>&orderBy=book_title&isAscending=<?=$isAscending?>">
+  				Title
+  				<?php 
+  					if($orderByField == 'book_title'){
+  				?>		
+		  				<span class="glyphicon glyphicon-arrow-<?= $isAscending ? 'up' : 'down'  ?>"></span>
+		  		<?php 		
+  					}
+  				?>
+  			</a>
+  		</th>
+  		<th>
+  			<a href="?<?=$_SERVER['QUERY_STRING']?>&orderBy=<?=FILED_QUANTITY?>&isAscending=<?=$isAscending?>">
+  				Quantity
+  				<?php 
+  					if($orderByField == FILED_QUANTITY){
+  				?>		
+		  				<span class="glyphicon glyphicon-arrow-<?= $isAscending ? 'up' : 'down'  ?>"></span>
+		  		<?php 		
+  					}
+  				?>
+  			</a>
+  		</th>
   		<th>Price</th>
   		<th>Description</th>
   		<th>Action</th>
@@ -47,6 +87,30 @@
   		?>
   </tbody>
 </table>
+
+<nav aria-label="..."> 
+	<ul class="pagination"> 
+		<li><a href="?<?=$_SERVER['QUERY_STRING']?>&offset=0">First</a></li> 
+		<li><a href="#">Prev</a></li> 
+		<?php 
+			for($i = 0 ; $i < ($total_rows/$page_size) ; $i++ ){
+		?>
+			<li class="<?=$i == $offset ? 'active' : ''?>"><a href="?<?=$_SERVER['QUERY_STRING']?>&offset=<?=$i?>"><?=$i+1?></a></li> 
+		<?php 
+			}
+			$nextLink = "";
+			
+			if($offset < ($total_rows/$page_size) -1){
+				$nextLink .= "href='?".$_SERVER['QUERY_STRING'];
+				$nextLink .= '&offset='. ($offset + 1)."'";
+			}
+		?>
+		<li <?=$nextLink ? '' : 'class="disabled"'?>>
+			<a <?=$nextLink?> >Next</a></li>
+		<li><a href="?<?=$_SERVER['QUERY_STRING']?>&offset=<?=($total_rows/$page_size)-1?>">last</a></li> 
+	</ul> 
+</nav>
+
 <a class="btnDelAll btn btn-danger" >Delete all</a>
 <script>
 	jQuery(function(){
