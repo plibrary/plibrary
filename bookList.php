@@ -2,17 +2,52 @@
 	define("FILED_QUANTITY", "quantity");
 	
 	$page_size = 2;
-	$bookCount= $conn->query('select count(book_id) as total from book ');
-	$data = $bookCount->fetch_assoc();
-	$total_rows = $data['total'];
-	$offset = empty($_GET['offset']) ? 0 : $_GET['offset'];
 	
-	$isAscending = empty($_GET['isAscending']) ? true : !$_GET['isAscending'];
-	$orderByField = empty($_GET['orderBy']) ? 'book_title' : $_GET['orderBy'];
+	$search = isset($_REQUEST['search']) ? $_REQUEST['search'] : '';
+	
+	
+	$offset = 0;
+	if (isset($_REQUEST['offset']) && !empty($_REQUEST['offset']))
+	{
+		$offset = $_REQUEST['offset'];
+	}
+	
+	if (isset($_REQUEST['isAscending']) && !empty($_REQUEST['isAscending']))
+	{
+		$isAscending = $_REQUEST['isAscending'];
+		
+		if (isset($_REQUEST['doOrderBy']) && !empty($_REQUEST['doOrderBy']) && $_REQUEST['doOrderBy']){
+			$isAscending  = $isAscending ? 0 : 1;
+		}
+	}else{
+		$isAscending = 1;
+	}
+	
+	$orderByField = 'book_title';
+	if (isset($_REQUEST['orderBy']) && !empty($_REQUEST['orderBy']))
+	{
+		$orderByField = $_REQUEST['orderBy'];
+	}
+	
+	$dataUrl = array(
+  						'isAscending'=>$isAscending,
+  						'orderBy'=>$orderByField,
+						'offset' => $offset
+  					);
+	
 	$select = "SELECT * from book";
+	$search = " WHERE book_title LIKE '%".$search
+				."%' OR quantity LIKE '%".$search
+				."%' OR price LIKE '%".$search
+				."%' OR description LIKE '%".$search."%' ";
 	$orderBy = " order by ".  $orderByField . ' ' . ($isAscending ? 'asc' : 'desc');
 	$limit = " limit ". $offset .", ".$page_size;
-	$sql = $select . $orderBy . $limit;
+	
+	$sql = $select . $search . $orderBy . $limit;
+	
+	$bookCount= $conn->query('select count(book_id) as total from book '.$search);
+	$data = $bookCount->fetch_assoc();
+	$total_rows = $data['total'];
 	
 	//echo($sql);
 	
@@ -22,6 +57,14 @@
 ?>
 <h1 class="text-center">Book List</h1>
 
+ <div class="form-group">
+    <div class="input-group">
+      <input type="text" class="form-control" id="search" placeholder="search" value="<?=isset($_GET['search']) ? $_GET['search'] : '' ?>">
+      <div class="input-group-addon" id="btnSearch">search</div>
+    </div>
+  </div>
+<br>
+
 <table class="table table-bordered">
   <thead>
   		<th>
@@ -29,7 +72,17 @@
   		</th>
   		<th>No</th>
   		<th>
-  			<a href="?<?=$_SERVER['QUERY_STRING']?>&orderBy=book_title&isAscending=<?=$isAscending?>">
+  			<?php 
+  				$dataUrl = array(
+  						'isAscending'=>$isAscending,
+  						'orderBy'=>'book_title',
+						'offset' => $offset,
+  						'doOrderBy' => 1
+  				);
+  				
+	  			$url = http_build_query($dataUrl);
+  			?>
+  			<a href="?<?= $url ?>">
   				Title
   				<?php 
   					if($orderByField == 'book_title'){
@@ -41,7 +94,17 @@
   			</a>
   		</th>
   		<th>
-  			<a href="?<?=$_SERVER['QUERY_STRING']?>&orderBy=<?=FILED_QUANTITY?>&isAscending=<?=$isAscending?>">
+  			<?php 
+	  			$dataUrl = array(
+	  					'isAscending'=>$isAscending,
+	  					'orderBy'=>FILED_QUANTITY,
+	  					'offset' => $offset,
+	  					'doOrderBy' => 1
+	  			);
+	  			
+	  			$url = http_build_query($dataUrl);
+  			?>
+  			<a href="?<?=$url?>">
   				Quantity
   				<?php 
   					if($orderByField == FILED_QUANTITY){
@@ -90,12 +153,33 @@
 
 <nav aria-label="..."> 
 	<ul class="pagination"> 
-		<li><a href="?<?=$_SERVER['QUERY_STRING']?>&offset=0">First</a></li> 
+		<?php 
+  				$dataUrl = array(
+	  					'isAscending'=>$isAscending,
+	  					'orderBy'=> isset($_REQUEST['orderBy']) &&  !empty($_REQUEST['orderBy']) ? $_REQUEST['orderBy'] : $orderByField,
+	  					'offset' => $offset,
+	  					'doOrderBy' => 0
+	  			);
+	  			
+	  			$url = http_build_query($dataUrl);
+  			?>
+  			
+		<li><a href="?<?=$url?>">First</a></li> 
 		<li><a href="#">Prev</a></li> 
 		<?php 
 			for($i = 0 ; $i < ($total_rows/$page_size) ; $i++ ){
 		?>
-			<li class="<?=$i == $offset ? 'active' : ''?>"><a href="?<?=$_SERVER['QUERY_STRING']?>&offset=<?=$i?>"><?=$i+1?></a></li> 
+		<?php 
+  				$dataUrl = array(
+	  					'isAscending'=>$isAscending,
+	  					'orderBy'=> isset($_REQUEST['orderBy']) &&  !empty($_REQUEST['orderBy']) ? $_REQUEST['orderBy'] : $orderByField,
+	  					'offset' => $i,
+	  					'doOrderBy' => 0
+	  			);
+	  			
+	  			$url = http_build_query($dataUrl);
+  			?>
+			<li class="<?=$i == $offset ? 'active' : ''?>"><a href="?<?=$url?>"><?=$i+1?></a></li> 
 		<?php 
 			}
 			$nextLink = "";
@@ -114,6 +198,18 @@
 <a class="btnDelAll btn btn-danger" >Delete all</a>
 <script>
 	jQuery(function(){
+		
+		function updateQueryStringParameter(uri, key, value) {
+			  var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+			  var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+			  if (uri.match(re)) {
+			    return uri.replace(re, '$1' + key + "=" + value + '$2');
+			  }
+			  else {
+			    return uri + separator + key + "=" + value;
+			  }
+			}
+		
 		$('.btnDel').click(function(){
 			if(confirm('Are you sure, you want to delete this book?')){
 				var bookId = $(this).data().bookId;
@@ -141,6 +237,12 @@
 
 				document.location.href = '?page=deleteBooks&bookIds=' + bookIds;
 			}
+		});
+
+		$('#btnSearch').click(function(){
+			var search = $('#search').val();
+			
+			document.location.href = updateQueryStringParameter(window.location.href, 'search', search);
 		});
 	});
 </script>

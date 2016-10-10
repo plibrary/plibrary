@@ -1,4 +1,6 @@
 <?php 
+	session_start();
+	
 	error_reporting(E_ALL);
 	ini_set('display_errors', 1);
 	
@@ -13,6 +15,9 @@
 	if ($conn->connect_error) {
 		die("Connection failed: " . $conn->connect_error);
 	}
+	
+	$isLogin = ( isset($_SESSION['login']) && !empty($_SESSION['login']) ) || ( isset($_COOKIE['login']) && !empty($_COOKIE['login']) );
+	
 ?>
 <!DOCTYPE html>
 <html>
@@ -32,6 +37,11 @@
 </head>
 <body id="page">
 	<div class="container">
+		<?php 
+			
+			if($isLogin){
+				
+		?>
 		<nav class="navbar navbar-default">
 		  <div class="container-fluid">
 		    <!-- Brand and toggle get grouped for better mobile display -->
@@ -57,7 +67,7 @@
 		        </li>
 		      </ul>
 		      <ul class="nav navbar-nav navbar-right">
-		        <li><a href="#">Log out</a></li>
+		        <li><a href="?page=logout">Log out</a></li>
 		        <li class="dropdown">
 		          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
 		          <ul class="dropdown-menu">
@@ -72,10 +82,17 @@
 		    </div><!-- /.navbar-collapse -->
 		  </div><!-- /.container-fluid -->
 		</nav>
+		<?php }?>
 		
 		<div id="content">
 			<?php 
-				include $_GET['page'] . '.php';
+				if( $isLogin ){
+					$page = isset($_GET['page']) &&  !empty($_GET['page']) ? $_GET['page'] : 'bookList' ;
+				}else{
+					$page = 'login';
+				}
+				
+				include  $page . '.php';
 			?>
 		</div>
 	</div>
